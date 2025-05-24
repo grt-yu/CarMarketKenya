@@ -76,8 +76,8 @@ export default function Header() {
               </>
             ) : (
               <>
-                <Button variant="outline" size="sm" className="hidden md:inline-flex">
-                  Sign In
+                <Button variant="outline" size="sm" className="hidden md:inline-flex" asChild>
+                  <Link href="/auth">Sign In</Link>
                 </Button>
                 <Button asChild>
                   <Link href="/sell">
@@ -100,11 +100,15 @@ export default function Header() {
                   <NavLinks mobile />
                   {!isAuthenticated && (
                     <>
-                      <Button variant="outline" className="justify-start" onClick={() => setIsOpen(false)}>
-                        Sign In
+                      <Button variant="outline" className="justify-start" asChild>
+                        <Link href="/auth" onClick={() => setIsOpen(false)}>
+                          Sign In
+                        </Link>
                       </Button>
-                      <Button variant="outline" className="justify-start" onClick={() => setIsOpen(false)}>
-                        Register
+                      <Button variant="outline" className="justify-start" asChild>
+                        <Link href="/auth" onClick={() => setIsOpen(false)}>
+                          Register
+                        </Link>
                       </Button>
                     </>
                   )}

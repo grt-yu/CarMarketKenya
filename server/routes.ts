@@ -783,6 +783,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Authentication Routes
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const bcrypt = require('bcrypt');
+      const { email, password } = req.body;
+      
+      // Find user by email
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+      
+      // Check password
+      const isValidPassword = await bcrypt.compare(password, user.password);
+      if (!isValidPassword) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+      
+      // Create session (simplified for demo)
+      req.session = req.session || {};
+      req.session.userId = user.id;
+      
+      // Return user data (without password)
+      const { password: _, ...userWithoutPassword } = user;
+      res.json({ user: userWithoutPassword, message: "Login successful" });
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ message: "Login failed" });
+    }
+  });
+
+  app.post("/api/auth/register", async (req, res) => {
+    try {
+      const bcrypt = require('bcrypt');
+      const userData = req.body;
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(userData.email);
+      if (existingUser) {
+        return res.status(400).json({ message: "Email already registered" });
+      }
+      
+      // Hash password
+      const hashedPassword = await bcrypt.hash(userData.password, 10);
+      
+      // Create user
+      const newUser = await storage.createUser({
+        ...userData,
+        password: hashedPassword
+      });
+      
+      // Create session
+      req.session = req.session || {};
+      req.session.userId = newUser.id;
+      
+      // Return user data (without password)
+      const { password: _, ...userWithoutPassword } = newUser;
+      res.json({ user: userWithoutPassword, message: "Registration successful" });
+    } catch (error) {
+      console.error("Registration error:", error);
+      res.status(500).json({ message: "Registration failed" });
+    }
+  });
+
+  app.post("/api/auth/logout", (req, res) => {
+    req.session = null;
+    res.json({ message: "Logout successful" });
+  });
+
+  app.get("/api/auth/user", (req, res) => {
+    if (!req.session?.userId) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    
+    // In a real app, you'd fetch the user from the database
+    res.json({ userId: req.session.userId });
+  });
+
   // Demo data endpoint to populate with 3 sellers and cars
   app.post("/api/demo/populate", async (req, res) => {
     try {

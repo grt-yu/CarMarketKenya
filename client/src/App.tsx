@@ -14,6 +14,7 @@ import BlogPost from "@/pages/blog-post";
 import Profile from "@/pages/profile";
 import Dashboard from "@/pages/dashboard";
 import Messages from "@/pages/messages";
+import AuthPage from "@/pages/auth";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -31,6 +32,7 @@ function Router() {
           <Route path="/profile/:id" component={Profile} />
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/messages" component={Messages} />
+          <Route path="/auth" component={AuthPage} />
           <Route component={NotFound} />
         </Switch>
       </main>
