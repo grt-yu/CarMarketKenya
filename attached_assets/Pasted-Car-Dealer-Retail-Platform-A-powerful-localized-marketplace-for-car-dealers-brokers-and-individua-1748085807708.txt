@@ -1,0 +1,55 @@
+Car Dealer Retail Platform
+A powerful, localized marketplace for car dealers, brokers, and individual sellers in Kenya.
+
+Our platform is more than just a car listing site. It’s a digital showroom equipped with advanced tools to drive lead generation, build trust, and streamline the buying process — whether you're a professional dealer or a first-time seller.
+
+Key Features:
+💼 For Sellers (Dealers, Brokers, Individuals):
+Subscription-Based Listings: Get access to listing packages tailored for individuals, brokers, and dealerships.
+
+Priority Ads on Homepage: Cars with paid promotions appear on the homepage and search results top spots.
+
+Secure Identity Verification: Sellers must verify their identities via ID upload to prevent fraud and scams.
+
+Seller Profiles & Ratings: Public seller profiles with user reviews to build credibility.
+
+💬 Communication & Engagement:
+Built-in Messaging & Chat: Buyers and sellers can chat in real time within the platform.
+
+SMS Notifications (Africa’s Talking API): Instant alerts for messages, updates, or interest in a listing.
+
+Blog & Auto News Section: Provide car buying tips, maintenance advice, and industry news to engage users and improve SEO.
+
+💳 Localized Payment & Monetization:
+Mpesa & Kenyan Payment Integration: Accept payments via Mpesa, Airtel Money, and local cards for subscriptions and promotions.
+
+Pay-to-Feature Ads: Offer one-time or recurring payments to boost listings visibility.
+
+Escrow Option (Future Enhancement): Secure buyer payments until car is verified and handed over.
+
+🧩 Platform Enhancements:
+Advanced Search & Filters: Allow users to filter cars by make, model, price, location, condition, etc.
+
+Image Gallery & Video Support: Sellers can add multiple images and even short videos to highlight key car features.
+
+Car History Reports (Optional): Integration with services that provide accident or ownership history for transparency.
+
+Mobile-Friendly & PWA Support: Optimized for mobile and available as a Progressive Web App for offline browsing.
+
+Suggested Additional Features:
+Favorites & Saved Listings – Let users bookmark vehicles they’re interested in and get notified if prices drop.
+
+User Dashboard – Sellers and buyers can manage listings, messages, payments, and ratings from a unified dashboard.
+
+Location-Based Listings – Use geolocation to show buyers listings near them first.
+
+Push Notifications – Especially if you develop a mobile app or PWA, to re-engage users with alerts.
+
+Reporting System – Allow users to report suspicious listings or sellers.
+
+Social Sharing Tools – Let users share listings directly to WhatsApp, Facebook, or X (Twitter).
+
+Referral Program – Reward users for referring new sellers or buyers.
+
+AI-Powered Car Pricing Tool – Help sellers price their cars competitively using market data.
+
