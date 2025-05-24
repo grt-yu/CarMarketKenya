@@ -783,5 +783,130 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Demo data endpoint to populate with 3 sellers and cars
+  app.post("/api/demo/populate", async (req, res) => {
+    try {
+      const bcrypt = require('bcrypt');
+      
+      // Create 3 demo sellers with enhanced authentication
+      const sellers = await Promise.all([
+        storage.createUser({
+          email: "john.dealer@automart.co.ke",
+          password: await bcrypt.hash("password123", 10),
+          firstName: "John",
+          lastName: "Mwangi", 
+          phone: "+254712345678",
+          location: "Nairobi",
+          userType: "dealer",
+          isVerified: true
+        }),
+        storage.createUser({
+          email: "sarah.seller@gmail.com",
+          password: await bcrypt.hash("password123", 10),
+          firstName: "Sarah",
+          lastName: "Kimani",
+          phone: "+254723456789", 
+          location: "Mombasa",
+          userType: "individual",
+          isVerified: true
+        }),
+        storage.createUser({
+          email: "peter.motors@outlook.com", 
+          password: await bcrypt.hash("password123", 10),
+          firstName: "Peter",
+          lastName: "Otieno",
+          phone: "+254734567890",
+          location: "Kisumu", 
+          userType: "dealer",
+          isVerified: true
+        })
+      ]);
+
+      // Create cars for each seller
+      const cars = await Promise.all([
+        // John's premium SUV (Nairobi Dealer)
+        storage.createCar({
+          sellerId: sellers[0].id,
+          title: "2019 Toyota Land Cruiser V8 - Premium SUV",
+          make: "Toyota",
+          model: "Land Cruiser", 
+          year: 2019,
+          price: "8500000",
+          mileage: 35000,
+          fuelType: "Petrol",
+          transmission: "Automatic",
+          bodyType: "SUV",
+          condition: "Excellent",
+          description: "Pristine Toyota Land Cruiser V8 with full service history. Perfect for both city and off-road adventures.",
+          location: "Nairobi",
+          county: "Nairobi",
+          images: ["https://images.unsplash.com/photo-1549924231-f129b911e442?w=800&h=600&fit=crop"],
+          features: ["Leather Seats", "Sunroof", "4WD", "Navigation System"],
+          status: "available"
+        }),
+        
+        // Sarah's family car (Mombasa Individual)
+        storage.createCar({
+          sellerId: sellers[1].id,
+          title: "2018 Nissan X-Trail - Family SUV", 
+          make: "Nissan",
+          model: "X-Trail",
+          year: 2018,
+          price: "3800000",
+          mileage: 48000,
+          fuelType: "Petrol", 
+          transmission: "CVT",
+          bodyType: "SUV",
+          condition: "Very Good",
+          description: "Well-maintained family SUV with excellent safety rating. Perfect for growing families.",
+          location: "Mombasa",
+          county: "Mombasa", 
+          images: ["https://images.unsplash.com/photo-1563720223185-11003d516935?w=800&h=600&fit=crop"],
+          features: ["7 Seater", "Reverse Camera", "Cruise Control", "Alloy Wheels"],
+          status: "available"
+        }),
+        
+        // Peter's modern SUV (Kisumu Dealer)
+        storage.createCar({
+          sellerId: sellers[2].id,
+          title: "2021 Mazda CX-5 - Modern Design SUV",
+          make: "Mazda", 
+          model: "CX-5",
+          year: 2021,
+          price: "4500000", 
+          mileage: 18000,
+          fuelType: "Petrol",
+          transmission: "Automatic",
+          bodyType: "SUV",
+          condition: "Like New",
+          description: "Nearly new Mazda CX-5 with stunning design and premium features. Low mileage, still under warranty.",
+          location: "Kisumu",
+          county: "Kisumu",
+          images: ["https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800&h=600&fit=crop"], 
+          features: ["Skyactiv Technology", "Bose Audio", "Head-Up Display", "Smart Key"],
+          status: "available"
+        })
+      ]);
+
+      res.json({
+        message: "Demo data created successfully!", 
+        data: {
+          sellers: sellers.length,
+          cars: cars.length,
+          details: {
+            sellers: sellers.map(s => ({ name: `${s.firstName} ${s.lastName}`, location: s.location, type: s.userType })),
+            cars: cars.map(c => ({ title: c.title, price: c.price, location: c.location }))
+          }
+        }
+      });
+    } catch (error) {
+      console.error("Demo data creation error:", error);
+      res.status(500).json({ 
+        message: "Failed to create demo data",
+        error: error.message 
+      });
+    }
+  });
+
   return httpServer;
 }
