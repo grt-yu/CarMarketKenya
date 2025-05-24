@@ -18,6 +18,17 @@ export const users = pgTable("users", {
   bio: text("bio"),
   rating: decimal("rating", { precision: 3, scale: 2 }).default("0"),
   totalRatings: integer("total_ratings").default(0),
+  // Advanced seller verification
+  idDocument: text("id_document"), // URL to uploaded ID
+  idDocumentType: text("id_document_type"), // passport, national_id, driving_license
+  idVerificationStatus: text("id_verification_status").default("pending"), // pending, verified, rejected
+  businessLicense: text("business_license"), // For dealers
+  dealershipName: text("dealership_name"),
+  // M-Pesa integration
+  mpesaPhoneNumber: text("mpesa_phone_number"),
+  // Premium features
+  isPremiumSeller: boolean("is_premium_seller").default(false),
+  premiumExpiresAt: timestamp("premium_expires_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -242,6 +253,78 @@ export const insertPaymentSchema = createInsertSchema(payments).omit({
 });
 
 // Types
+// Car negotiations table
+export const negotiations = pgTable("negotiations", {
+  id: serial("id").primaryKey(),
+  carId: integer("car_id").notNull().references(() => cars.id),
+  buyerId: integer("buyer_id").notNull().references(() => users.id),
+  sellerId: integer("seller_id").notNull().references(() => users.id),
+  offerPrice: decimal("offer_price", { precision: 12, scale: 2 }).notNull(),
+  message: text("message"),
+  status: text("status").notNull().default("pending"), // pending, accepted, rejected, countered
+  counterOffer: decimal("counter_offer", { precision: 12, scale: 2 }),
+  expiresAt: timestamp("expires_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Real-time chat table
+export const chatRooms = pgTable("chat_rooms", {
+  id: serial("id").primaryKey(),
+  carId: integer("car_id").references(() => cars.id),
+  buyerId: integer("buyer_id").notNull().references(() => users.id),
+  sellerId: integer("seller_id").notNull().references(() => users.id),
+  isActive: boolean("is_active").default(true),
+  lastMessageAt: timestamp("last_message_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const chatMessages = pgTable("chat_messages", {
+  id: serial("id").primaryKey(),
+  roomId: integer("room_id").notNull().references(() => chatRooms.id),
+  senderId: integer("sender_id").notNull().references(() => users.id),
+  message: text("message").notNull(),
+  messageType: text("message_type").default("text"), // text, image, offer, document
+  isRead: boolean("is_read").default(false),
+  attachmentUrl: text("attachment_url"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Car analytics for sellers
+export const carAnalytics = pgTable("car_analytics", {
+  id: serial("id").primaryKey(),
+  carId: integer("car_id").notNull().references(() => cars.id),
+  date: timestamp("date").notNull(),
+  views: integer("views").default(0),
+  inquiries: integer("inquiries").default(0),
+  favorites: integer("favorites").default(0),
+  shares: integer("shares").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// M-Pesa transactions
+export const mpesaTransactions = pgTable("mpesa_transactions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  carId: integer("car_id").references(() => cars.id),
+  transactionId: text("transaction_id").notNull().unique(),
+  phoneNumber: text("phone_number").notNull(),
+  amount: decimal("amount", { precision: 12, scale: 2 }).notNull(),
+  transactionType: text("transaction_type").notNull(), // payment, deposit, premium_upgrade
+  status: text("status").notNull().default("pending"), // pending, completed, failed
+  mpesaReceiptNumber: text("mpesa_receipt_number"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Advanced schema definitions
+export const insertNegotiationSchema = createInsertSchema(negotiations);
+export const insertChatRoomSchema = createInsertSchema(chatRooms);
+export const insertChatMessageSchema = createInsertSchema(chatMessages);
+export const insertCarAnalyticsSchema = createInsertSchema(carAnalytics);
+export const insertMpesaTransactionSchema = createInsertSchema(mpesaTransactions);
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type Car = typeof cars.$inferSelect;
@@ -256,3 +339,13 @@ export type Review = typeof reviews.$inferSelect;
 export type InsertReview = z.infer<typeof insertReviewSchema>;
 export type Payment = typeof payments.$inferSelect;
 export type InsertPayment = z.infer<typeof insertPaymentSchema>;
+export type Negotiation = typeof negotiations.$inferSelect;
+export type InsertNegotiation = z.infer<typeof insertNegotiationSchema>;
+export type ChatRoom = typeof chatRooms.$inferSelect;
+export type InsertChatRoom = z.infer<typeof insertChatRoomSchema>;
+export type ChatMessage = typeof chatMessages.$inferSelect;
+export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
+export type CarAnalytics = typeof carAnalytics.$inferSelect;
+export type InsertCarAnalytics = z.infer<typeof insertCarAnalyticsSchema>;
+export type MpesaTransaction = typeof mpesaTransactions.$inferSelect;
+export type InsertMpesaTransaction = z.infer<typeof insertMpesaTransactionSchema>;

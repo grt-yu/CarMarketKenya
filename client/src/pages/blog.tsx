@@ -168,7 +168,7 @@ export default function Blog() {
           />
         </div>
         
-        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+        <Select value={selectedCategory || "all"} onValueChange={(value) => setSelectedCategory(value === "all" ? "" : value)}>
           <SelectTrigger className="md:w-48">
             <SelectValue placeholder="All Categories" />
           </SelectTrigger>
