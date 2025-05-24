@@ -186,4 +186,140 @@ Format your response as JSON with the following structure:
       }
     };
   }
+
+  async compareCars(mainCar: CarPricingData, compareCars: CarPricingData[]): Promise<{
+    comparison: Array<{
+      car: CarPricingData;
+      valueScore: number;
+      pros: string[];
+      cons: string[];
+      priceComparison: string;
+    }>;
+    recommendation: string;
+  }> {
+    try {
+      const prompt = `Compare these cars for a buyer in Kenya:
+
+MAIN CAR:
+${JSON.stringify(mainCar, null, 2)}
+
+COMPARISON CARS:
+${compareCars.map((car, i) => `Car ${i + 1}: ${JSON.stringify(car, null, 2)}`).join('\n\n')}
+
+Provide a detailed comparison with:
+1. Value score (1-10) for each comparison car
+2. Pros and cons for each car vs the main car
+3. Price comparison analysis
+4. Overall recommendation
+
+Return JSON in this format:
+{
+  "comparison": [
+    {
+      "car": {...},
+      "valueScore": 8.5,
+      "pros": ["Better fuel economy", "Lower maintenance"],
+      "cons": ["Higher price", "Older model"],
+      "priceComparison": "15% more expensive but better value"
+    }
+  ],
+  "recommendation": "Overall recommendation text"
+}`;
+
+      const response = await this.deepseek.chat([
+        {
+          role: "system",
+          content: "You are an expert automotive advisor specializing in the Kenyan market. Provide practical, unbiased car comparisons."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ]);
+
+      return JSON.parse(response);
+    } catch (error) {
+      console.error('Car comparison failed:', error);
+      return {
+        comparison: compareCars.map(car => ({
+          car,
+          valueScore: 7.0,
+          pros: ["Standard features"],
+          cons: ["Limited comparison data"],
+          priceComparison: "Similar pricing range"
+        })),
+        recommendation: "Unable to perform detailed comparison at this time."
+      };
+    }
+  }
+
+  async getCarHistory(carData: CarPricingData): Promise<{
+    historyScore: number;
+    riskFactors: string[];
+    positiveFactors: string[];
+    recommendations: string[];
+    marketHistory: {
+      depreciation: string;
+      popularityTrend: string;
+      reliabilityRating: string;
+    };
+  }> {
+    try {
+      const prompt = `Analyze the history and reliability of this car for the Kenyan market:
+
+CAR DETAILS:
+Make: ${carData.make}
+Model: ${carData.model}
+Year: ${carData.year}
+Mileage: ${carData.mileage} km
+Condition: ${carData.condition}
+Location: ${carData.location}
+
+Provide analysis on:
+1. Known issues for this make/model/year
+2. Expected depreciation in Kenya
+3. Parts availability and service costs
+4. Market popularity and resale value
+5. Risk factors and positive aspects
+
+Return JSON format:
+{
+  "historyScore": 8.2,
+  "riskFactors": ["High service costs", "Parts availability"],
+  "positiveFactors": ["Reliable engine", "Good resale value"],
+  "recommendations": ["Check service history", "Verify mileage"],
+  "marketHistory": {
+    "depreciation": "15% per year average",
+    "popularityTrend": "Increasing demand",
+    "reliabilityRating": "Above average"
+  }
+}`;
+
+      const response = await this.deepseek.chat([
+        {
+          role: "system",
+          content: "You are a car history and reliability expert with extensive knowledge of the Kenyan automotive market, insurance claims, and common vehicle issues."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ]);
+
+      return JSON.parse(response);
+    } catch (error) {
+      console.error('Car history analysis failed:', error);
+      return {
+        historyScore: 7.0,
+        riskFactors: ["Limited history data available"],
+        positiveFactors: ["Standard market vehicle"],
+        recommendations: ["Conduct thorough inspection", "Verify documentation"],
+        marketHistory: {
+          depreciation: "Standard market rate",
+          popularityTrend: "Stable demand",
+          reliabilityRating: "Average"
+        }
+      };
+    }
+  }
 }

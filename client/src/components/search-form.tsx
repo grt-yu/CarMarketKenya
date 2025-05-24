@@ -121,7 +121,7 @@ export default function SearchForm({ initialFilters, onSearch, compact = false }
               <SelectValue placeholder="All Kenya" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Kenya</SelectItem>
+              <SelectItem value="all">All Kenya</SelectItem>
               {KENYAN_COUNTIES.map((county) => (
                 <SelectItem key={county} value={county}>{county}</SelectItem>
               ))}

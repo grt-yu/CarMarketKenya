@@ -481,6 +481,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AI Car Comparison Route
+  app.post("/api/ai/compare-cars", async (req, res) => {
+    try {
+      const { mainCarId, compareCarIds } = req.body;
+      
+      const mainCar = await storage.getCarById(mainCarId);
+      if (!mainCar) {
+        return res.status(404).json({ message: "Main car not found" });
+      }
+
+      const compareCars = await Promise.all(
+        compareCarIds.map((id: number) => storage.getCarById(id))
+      );
+
+      const validCompareCars = compareCars.filter(car => car !== undefined);
+      
+      const aiPricing = new AICarPricing();
+      const comparison = await aiPricing.compareCars(
+        {
+          make: mainCar.make,
+          model: mainCar.model,
+          year: mainCar.year,
+          mileage: mainCar.mileage,
+          condition: mainCar.condition,
+          fuelType: mainCar.fuelType,
+          transmission: mainCar.transmission,
+          bodyType: mainCar.bodyType,
+          location: mainCar.location,
+          features: mainCar.features || []
+        },
+        validCompareCars.map(car => ({
+          make: car.make,
+          model: car.model,
+          year: car.year,
+          mileage: car.mileage,
+          condition: car.condition,
+          fuelType: car.fuelType,
+          transmission: car.transmission,
+          bodyType: car.bodyType,
+          location: car.location,
+          features: car.features || []
+        }))
+      );
+
+      res.json(comparison);
+    } catch (error) {
+      console.error("AI comparison error:", error);
+      res.status(500).json({ message: "Car comparison analysis failed" });
+    }
+  });
+
+  // AI Car History Route
+  app.post("/api/ai/car-history", async (req, res) => {
+    try {
+      const { carId } = req.body;
+      
+      const car = await storage.getCarById(carId);
+      if (!car) {
+        return res.status(404).json({ message: "Car not found" });
+      }
+
+      const aiPricing = new AICarPricing();
+      const history = await aiPricing.getCarHistory({
+        make: car.make,
+        model: car.model,
+        year: car.year,
+        mileage: car.mileage,
+        condition: car.condition,
+        fuelType: car.fuelType,
+        transmission: car.transmission,
+        bodyType: car.bodyType,
+        location: car.location,
+        features: car.features || []
+      });
+
+      res.json(history);
+    } catch (error) {
+      console.error("AI history error:", error);
+      res.status(500).json({ message: "Car history analysis failed" });
+    }
+  });
+
   // M-Pesa Payment Routes
   app.post("/api/mpesa/initiate", async (req, res) => {
     try {
