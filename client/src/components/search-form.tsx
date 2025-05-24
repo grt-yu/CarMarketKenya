@@ -43,7 +43,7 @@ export default function SearchForm({ initialFilters, onSearch, compact = false }
             <SelectValue placeholder="Make" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Any Make</SelectItem>
+            <SelectItem value="all">Any Make</SelectItem>
             {CAR_MAKES.map((make) => (
               <SelectItem key={make} value={make}>{make}</SelectItem>
             ))}
@@ -61,7 +61,7 @@ export default function SearchForm({ initialFilters, onSearch, compact = false }
             <SelectValue placeholder="Price" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Any Price</SelectItem>
+            <SelectItem value="all">Any Price</SelectItem>
             {PRICE_RANGES.map((range) => (
               <SelectItem key={range.label} value={range.label}>{range.label}</SelectItem>
             ))}
@@ -85,7 +85,7 @@ export default function SearchForm({ initialFilters, onSearch, compact = false }
               <SelectValue placeholder="Any Make" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Any Make</SelectItem>
+              <SelectItem value="all">Any Make</SelectItem>
               {CAR_MAKES.map((make) => (
                 <SelectItem key={make} value={make}>{make}</SelectItem>
               ))}
@@ -106,7 +106,7 @@ export default function SearchForm({ initialFilters, onSearch, compact = false }
               <SelectValue placeholder="Any Price" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Any Price</SelectItem>
+              <SelectItem value="all">Any Price</SelectItem>
               {PRICE_RANGES.map((range) => (
                 <SelectItem key={range.label} value={range.label}>{range.label}</SelectItem>
               ))}
