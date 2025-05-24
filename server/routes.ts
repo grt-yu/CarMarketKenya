@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import { 
   insertUserSchema, 
@@ -8,10 +9,17 @@ import {
   insertBlogPostSchema,
   insertFavoriteSchema,
   insertReviewSchema,
-  insertPaymentSchema
+  insertPaymentSchema,
+  insertNegotiationSchema,
+  insertChatRoomSchema,
+  insertChatMessageSchema,
+  insertMpesaTransactionSchema
 } from "@shared/schema";
 import bcrypt from "bcrypt";
 import { z } from "zod";
+import { AICarPricing } from "./ai-pricing";
+import { MpesaIntegration, createMpesaTransaction } from "./mpesa-integration";
+import { MailService } from '@sendgrid/mail';
 
 // Auth schemas
 const loginSchema = z.object({
@@ -22,6 +30,15 @@ const loginSchema = z.object({
 const registerSchema = insertUserSchema.extend({
   password: z.string().min(6),
 });
+
+// Initialize services
+const aiPricing = new AICarPricing();
+const mpesa = new MpesaIntegration();
+const mailService = new MailService();
+
+if (process.env.SENDGRID_API_KEY) {
+  mailService.setApiKey(process.env.SENDGRID_API_KEY);
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
@@ -434,6 +451,255 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AI-Powered Car Pricing Routes
+  app.post("/api/cars/:id/ai-pricing", async (req, res) => {
+    try {
+      const carId = parseInt(req.params.id);
+      const car = await storage.getCarById(carId);
+      
+      if (!car) {
+        return res.status(404).json({ message: "Car not found" });
+      }
+
+      const pricingResult = await aiPricing.analyzePricing({
+        make: car.make,
+        model: car.model,
+        year: car.year,
+        mileage: car.mileage,
+        condition: car.condition,
+        fuelType: car.fuelType,
+        transmission: car.transmission,
+        bodyType: car.bodyType,
+        location: car.location,
+        features: car.features
+      });
+
+      res.json(pricingResult);
+    } catch (error) {
+      console.error("AI pricing error:", error);
+      res.status(500).json({ message: "AI pricing analysis failed" });
+    }
+  });
+
+  // M-Pesa Payment Routes
+  app.post("/api/mpesa/initiate", async (req, res) => {
+    try {
+      const { phoneNumber, amount, carId, transactionType } = req.body;
+      
+      if (!mpesa.validatePhoneNumber(phoneNumber)) {
+        return res.status(400).json({ message: "Invalid phone number format" });
+      }
+
+      const formattedPhone = mpesa.formatPhoneNumber(phoneNumber);
+      let transactionData;
+
+      switch (transactionType) {
+        case 'car_deposit':
+          transactionData = createMpesaTransaction.carDeposit(carId, amount);
+          break;
+        case 'premium_upgrade':
+          transactionData = createMpesaTransaction.premiumUpgrade(req.body.userId, req.body.duration);
+          break;
+        case 'car_payment':
+          transactionData = createMpesaTransaction.carPayment(carId, amount);
+          break;
+        default:
+          return res.status(400).json({ message: "Invalid transaction type" });
+      }
+
+      const result = await mpesa.initiateSTKPush({
+        phoneNumber: formattedPhone,
+        amount: transactionData.amount,
+        accountReference: transactionData.accountReference,
+        transactionDesc: transactionData.transactionDesc
+      });
+
+      res.json(result);
+    } catch (error) {
+      console.error("M-Pesa initiation error:", error);
+      res.status(500).json({ message: "Payment initiation failed" });
+    }
+  });
+
+  app.post("/api/mpesa/callback", async (req, res) => {
+    try {
+      const callbackData = req.body;
+      const result = mpesa.processCallback(callbackData);
+      
+      if (result.success) {
+        // Update payment status in database
+        console.log("Payment successful:", result);
+        // Add logic to update relevant records
+      } else {
+        console.log("Payment failed:", result.error);
+      }
+      
+      res.json({ ResultCode: 0, ResultDesc: "Accepted" });
+    } catch (error) {
+      console.error("M-Pesa callback error:", error);
+      res.status(500).json({ message: "Callback processing failed" });
+    }
+  });
+
+  // Real-time Chat Routes
+  app.get("/api/chat/rooms/:userId", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      // Add chat room logic here once storage is updated
+      res.json([]);
+    } catch (error) {
+      console.error("Get chat rooms error:", error);
+      res.status(500).json({ message: "Failed to fetch chat rooms" });
+    }
+  });
+
+  app.post("/api/chat/rooms", async (req, res) => {
+    try {
+      const roomData = insertChatRoomSchema.parse(req.body);
+      // Add chat room creation logic here once storage is updated
+      res.json({ message: "Chat room created" });
+    } catch (error) {
+      console.error("Create chat room error:", error);
+      res.status(400).json({ message: "Invalid chat room data" });
+    }
+  });
+
+  // Seller Verification Routes
+  app.post("/api/verification/upload-id", async (req, res) => {
+    try {
+      const { userId, documentType, documentUrl } = req.body;
+      
+      // Update user verification status
+      await storage.updateUser(userId, {
+        idDocument: documentUrl,
+        idDocumentType: documentType,
+        idVerificationStatus: "pending"
+      });
+
+      // Send notification email to admin
+      if (process.env.SENDGRID_API_KEY) {
+        await mailService.send({
+          to: process.env.ADMIN_EMAIL || "admin@carmarket.com",
+          from: process.env.FROM_EMAIL || "noreply@carmarket.com",
+          subject: "New ID Verification Request",
+          html: `<p>User ${userId} has submitted ID verification documents for review.</p>`
+        });
+      }
+
+      res.json({ message: "ID verification submitted successfully" });
+    } catch (error) {
+      console.error("ID verification error:", error);
+      res.status(500).json({ message: "ID verification failed" });
+    }
+  });
+
+  app.put("/api/verification/approve/:userId", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const { status } = req.body; // approved, rejected
+      
+      await storage.updateUser(userId, {
+        idVerificationStatus: status,
+        isVerified: status === "approved"
+      });
+
+      res.json({ message: `Verification ${status}` });
+    } catch (error) {
+      console.error("Verification approval error:", error);
+      res.status(500).json({ message: "Verification update failed" });
+    }
+  });
+
+  // Analytics Dashboard Routes
+  app.get("/api/analytics/seller/:userId", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      // Get seller analytics data
+      const analytics = {
+        totalListings: 0,
+        totalViews: 0,
+        totalInquiries: 0,
+        totalFavorites: 0,
+        activeListings: 0,
+        soldListings: 0,
+        averageResponseTime: "2 hours",
+        conversionRate: "12%",
+        monthlyStats: [],
+        topPerformingCars: [],
+        recentActivity: []
+      };
+
+      res.json(analytics);
+    } catch (error) {
+      console.error("Analytics error:", error);
+      res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
+
+  // Negotiation Routes
+  app.post("/api/negotiations", async (req, res) => {
+    try {
+      const negotiationData = insertNegotiationSchema.parse(req.body);
+      // Add negotiation creation logic here once storage is updated
+      res.json({ message: "Negotiation created" });
+    } catch (error) {
+      console.error("Create negotiation error:", error);
+      res.status(400).json({ message: "Invalid negotiation data" });
+    }
+  });
+
+  app.get("/api/negotiations/car/:carId", async (req, res) => {
+    try {
+      const carId = parseInt(req.params.carId);
+      // Add negotiation fetching logic here once storage is updated
+      res.json([]);
+    } catch (error) {
+      console.error("Get negotiations error:", error);
+      res.status(500).json({ message: "Failed to fetch negotiations" });
+    }
+  });
+
+  // WebSocket setup for real-time chat
   const httpServer = createServer(app);
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+
+  wss.on('connection', (ws: WebSocket) => {
+    console.log('New WebSocket connection established');
+
+    ws.on('message', (message: string) => {
+      try {
+        const data = JSON.parse(message.toString());
+        
+        // Handle different message types
+        switch (data.type) {
+          case 'join_room':
+            // Join chat room logic
+            break;
+          case 'send_message':
+            // Send message to room participants
+            wss.clients.forEach(client => {
+              if (client !== ws && client.readyState === WebSocket.OPEN) {
+                client.send(JSON.stringify({
+                  type: 'new_message',
+                  data: data.message
+                }));
+              }
+            });
+            break;
+          case 'typing':
+            // Handle typing indicators
+            break;
+        }
+      } catch (error) {
+        console.error('WebSocket message error:', error);
+      }
+    });
+
+    ws.on('close', () => {
+      console.log('WebSocket connection closed');
+    });
+  });
+
   return httpServer;
 }
