@@ -148,14 +148,14 @@ export default function Cars() {
               <div>
                 <Label htmlFor="make">Make</Label>
                 <Select 
-                  value={filters.make || ""} 
-                  onValueChange={(value) => updateFilters({ make: value || undefined })}
+                  value={filters.make || "all"} 
+                  onValueChange={(value) => updateFilters({ make: value === "all" ? undefined : value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Any Make" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Any Make</SelectItem>
+                    <SelectItem value="all">Any Make</SelectItem>
                     {CAR_MAKES.map((make) => (
                       <SelectItem key={make} value={make}>{make}</SelectItem>
                     ))}
@@ -171,7 +171,7 @@ export default function Cars() {
                     <SelectValue placeholder="Any Price" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Any Price</SelectItem>
+                    <SelectItem value="all">Any Price</SelectItem>
                     {PRICE_RANGES.map((range) => (
                       <SelectItem key={range.label} value={range.label}>
                         {range.label}
@@ -213,14 +213,14 @@ export default function Cars() {
               <div>
                 <Label htmlFor="county">County</Label>
                 <Select 
-                  value={filters.county || ""} 
-                  onValueChange={(value) => updateFilters({ county: value || undefined })}
+                  value={filters.county || "all"} 
+                  onValueChange={(value) => updateFilters({ county: value === "all" ? undefined : value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="All Kenya" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Kenya</SelectItem>
+                    <SelectItem value="all">All Kenya</SelectItem>
                     {KENYAN_COUNTIES.map((county) => (
                       <SelectItem key={county} value={county}>{county}</SelectItem>
                     ))}
@@ -232,14 +232,14 @@ export default function Cars() {
               <div>
                 <Label htmlFor="bodyType">Body Type</Label>
                 <Select 
-                  value={filters.bodyType || ""} 
-                  onValueChange={(value) => updateFilters({ bodyType: value || undefined })}
+                  value={filters.bodyType || "all"} 
+                  onValueChange={(value) => updateFilters({ bodyType: value === "all" ? undefined : value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Any Type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Any Type</SelectItem>
+                    <SelectItem value="all">Any Type</SelectItem>
                     {BODY_TYPES.map((type) => (
                       <SelectItem key={type} value={type}>{type}</SelectItem>
                     ))}
@@ -251,14 +251,14 @@ export default function Cars() {
               <div>
                 <Label htmlFor="fuelType">Fuel Type</Label>
                 <Select 
-                  value={filters.fuelType || ""} 
-                  onValueChange={(value) => updateFilters({ fuelType: value || undefined })}
+                  value={filters.fuelType || "all"} 
+                  onValueChange={(value) => updateFilters({ fuelType: value === "all" ? undefined : value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Any Fuel" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Any Fuel</SelectItem>
+                    <SelectItem value="all">Any Fuel</SelectItem>
                     {FUEL_TYPES.map((fuel) => (
                       <SelectItem key={fuel} value={fuel}>{fuel}</SelectItem>
                     ))}
@@ -270,14 +270,14 @@ export default function Cars() {
               <div>
                 <Label htmlFor="transmission">Transmission</Label>
                 <Select 
-                  value={filters.transmission || ""} 
-                  onValueChange={(value) => updateFilters({ transmission: value || undefined })}
+                  value={filters.transmission || "all"} 
+                  onValueChange={(value) => updateFilters({ transmission: value === "all" ? undefined : value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Any Transmission" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Any Transmission</SelectItem>
+                    <SelectItem value="all">Any Transmission</SelectItem>
                     {TRANSMISSIONS.map((trans) => (
                       <SelectItem key={trans} value={trans}>{trans}</SelectItem>
                     ))}

@@ -173,7 +173,7 @@ export default function Blog() {
             <SelectValue placeholder="All Categories" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Categories</SelectItem>
+            <SelectItem value="all">All Categories</SelectItem>
             {BLOG_CATEGORIES.map((category) => (
               <SelectItem key={category.value} value={category.value}>
                 {category.label}
